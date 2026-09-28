@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Report: Concrete Micro-Mechanics & Strength Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --site-yellow: #f39c12;
+            --site-dark: #121417;
+            --site-panel: rgba(22, 26, 32, 0.85);
+            --concrete-gray: #95a5a6;
+            --alert-red: #e74c3c;
+            --text-main: #ecf0f1;
+        }
+
+        body {
+            margin: 0;
+            background: var(--site-dark);
+            font-family: 'Sarabun', sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vw;
+            z-index: 1;
+        }
+
+        /* Magazine Layout - Golden Ratio Proportions */
+        .magazine-container {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1.618fr 1fr;
+            height: 100vh;
+            padding: 24px;
+            box-sizing: border-box;
+            pointer-events: none; /* ให้คลิกทะลุไปที่แคนวาสได้ */
+        }
+
+        .editorial-panel {
+            background: var(--site-panel);
+            border: 1px solid rgba(243, 156, 18, 0.3);
+            border-left: 6px solid var(--site-yellow);
+            padding: 28px;
+            border-radius: 12px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            overflow-y: auto;
+            max-height: calc(100vh - 48px);
+            pointer-events: auto; /* เปิดให้คลิกและเลื่อนอ่านได้ */
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--site-yellow);
+            color: #000;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            margin: 0 0 12px 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--site-yellow);
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--concrete-gray);
+            margin-bottom: 20px;
+            border-bottom: 1px dashed rgba(255,255,255,0.15);
+            padding-bottom: 10px;
+        }
+
+        .math-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 3px solid #3498db;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #3498db;
+        }
+
+        p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        /* Control Dashboard (Site Engineer Style) */
+        .control-dashboard {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2;
+            background: var(--site-panel);
+            border: 1px solid rgba(243, 156, 18, 0.4);
+            padding: 20px 24px;
+            border-radius: 12px;
+            width: 320px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .control-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--site-yellow);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--site-yellow);
+            height: 6px;
+            background: #2c3e50;
+            border-radius: 3px;
+            outline: none;
+            margin: 10px 0;
+        }
+
+        #status-display {
+            margin-top: 8px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+
+        @media(max-width: 900px) {
+            .magazine-container { grid-template-columns: 1fr; }
+            .editorial-panel { max-height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="engineCanvas"></canvas>
+
+    <div class="magazine-container">
+        <div class="editorial-panel">
+            <span class="badge">SITE TECH REPORT // REF: CONC-04</span>
+            <h1>การวิเคราะห์พฤติกรรมกำลังอัดคอนกรีตระดับจุลภาค (Micro-Mechanics)</h1>
+            <div class="subtitle">บันทึกวิศวกรสนาม: จำลองโครงสร้างมวลรวม (Aggregates) และแรงยึดเกาะซีเมนต์เพสต์</div>
+
+            <p>ในงานก่อสร้างหน้างานจริง กำลังอัดของคอนกรีต ($f'_c$) ไม่ได้ขึ้นอยู่กับปูนซีเมนต์เพียงอย่างเดียว แต่ถูกขับเคลื่อนด้วยระบบเครือข่ายความสัมพันธ์ระหว่างมวลรวมหิน ทราย และสารยึดเกาะ โมเดลนี้จำลองโครงสร้างอนุภาคผ่านคณิตศาสตร์เชิงกลศาสตร์วัสดุ</p>
+
+            <div class="math-box">
+                Mohr-Coulomb Failure Criterion:<br>
+                $\tau = c + \sigma_n \tan(\phi)$<br><br>
+                โดยที่:<br>
+                • $\tau$ = กำลังต้านทานแรงเฉือน<br>
+                • $c$ = แรงยึดเหนี่ยวซีเมนต์เพสต์ (Cohesion)<br>
+                • $\sigma_n$ = ความเค้นตั้งฉากบนระนาบวิบัติ<br>
+                • $\phi$ = มุมเสียดทานภายใน (Internal Friction)
+            </div>
+
+            <p>เมื่อแรงกดอัดจากภายนอกเพิ่มสูงขึ้น แรงเค้นจะถ่ายเทผ่านเครือข่าย Linked List หากเกินขีดจำกัดความเค้นสูงสุด ($100\%$) พันธะซีเมนต์จะเกิดรอยร้าวต่อเนื่อง (Micro-cracking) นำไปสู่การวิบัติของโครงสร้างในที่สุด</p>
+        </div>
+    </div>
+
+    <div class="control-dashboard">
+        <div class="control-title">
+            <span>COMPRESSIVE LOAD TEST</span>
+            <span id="load-val">0%</span>
+        </div>
+        <input type="range" id="loadSlider" min="0" max="100" step="1" value="0" oninput="updateLoad(this.value)">
+        <div id="status-display">STATUS: SAFE (โครงสร้างปกติ)</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('engineCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDisplay = document.getElementById('status-display');
+        const loadValText = document.getElementById('load-val');
+
+        let loadLevel = 0;
+
+        function updateLoad(val) {
+            loadLevel = parseInt(val);
+            loadValText.innerText = loadLevel + '%';
+            if (loadLevel < 35) {
+                statusDisplay.innerText = "STATUS: SAFE (ยึดเกาะสมบูรณ์)";
+                statusDisplay.style.color = "#00ffcc";
+            } else if (loadLevel < 75) {
+                statusDisplay.innerText = "STATUS: WARNING (เริ่มเกิด Micro-cracks)";
+                statusDisplay.style.color = "#f39c12";
+            } else {
+                statusDisplay.innerText = "STATUS: FAILURE (คอนกรีตวิบัติ/แตกร้าว)";
+                statusDisplay.style.color = "#e74c3c";
+            }
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class ConcreteNode {
+            constructor(x, y, type) {
+                this.ox = x; this.oy = y;
+                this.x = x; this.y = y;
+                this.vx = 0; this.vy = 0;
+                this.type = type;
+                
+                if (type === 'rock') {
+                    this.radius = 10 + Math.random() * 8;
+                    this.color = '#7f8c8d';
+                } else if (type === 'sand') {
+                    this.radius = 3.5 + Math.random() * 2.5;
+                    this.color = '#d35400';
+                } else {
+                    this.radius = 1.8;
+                    this.color = '#bdc3c7';
+                }
+                this.neighbors = [];
+            }
+
+            update() {
+                let stiffness = 0.06;
+                let dx = this.ox - this.x;
+                let dy = this.oy - this.y;
+
+                this.vx += dx * stiffness;
+                this.vy += dy * stiffness;
+
+                let compressiveForce = (loadLevel / 100);
+                if (this.type === 'rock') {
+                    this.vy += compressiveForce * 1.2;
+                    this.vx += (Math.random() - 0.5) * compressiveForce * 2;
+                } else {
+                    this.vy += compressiveForce * 2.5;
+                    this.vx += (Math.random() - 0.5) * compressiveForce * 6;
+                }
+
+                this.vx *= 0.82;
+                this.vy *= 0.82;
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+        }
+
+        let nodesArray = [];
+
+        function initConcrete() {
+            // วางตำแหน่งชิ้นงานเยื้องมาทางขวาเล็กน้อยเพื่อให้รับกับเลย์เอาต์นิตยสาร
+            let cx = window.innerWidth * 0.65;
+            let cy = window.innerHeight / 2;
+            let width = 240;
+            let height = 320;
+
+            // หิน
+            for(let i=0; i<30; i++) {
+                nodesArray.push(new ConcreteNode(cx + (Math.random()-0.5)*(width-60), cy + (Math.random()-0.5)*(height-60), 'rock'));
+            }
+            // ทราย
+            for(let i=0; i<110; i++) {
+                nodesArray.push(new ConcreteNode(cx + (Math.random()-0.5)*width, cy + (Math.random()-0.5)*height, 'sand'));
+            }
+            // ซีเมนต์
+            for(let i=0; i<220; i++) {
+                nodesArray.push(new ConcreteNode(cx + (Math.random()-0.5)*width, cy + (Math.random()-0.5)*height, 'paste'));
+            }
+
+            // ผูกพันธะเพื่อนบ้าน
+            for(let i=0; i<nodesArray.length; i++) {
+                for(let j=i+1; j<nodesArray.length; j++) {
+                    let dist = Math.hypot(nodesArray[i].ox - nodesArray[j].ox, nodesArray[i].oy - nodesArray[j].oy);
+                    if(dist < 38) {
+                        nodesArray[i].neighbors.push(nodesArray[j]);
+                    }
+                }
+            }
+        }
+        initConcrete();
+
+        function renderLoop() {
+            ctx.fillStyle = 'rgba(18, 20, 23, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // เรนเดอร์เส้นพันธะ
+            nodesArray.forEach(node => {
+                node.update();
+                node.neighbors.forEach(neighbor => {
+                    let currentDist = Math.hypot(node.x - neighbor.x, node.y - neighbor.y);
+                    let origDist = Math.hypot(node.ox - neighbor.ox, node.oy - neighbor.oy);
+                    let strain = Math.abs(currentDist - origDist);
+
+                    let breakThreshold = 14 + (100 - loadLevel) * 0.18;
+                    if (strain < breakThreshold) {
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(neighbor.x, neighbor.y);
+                        
+                        let alpha = Math.max(0.05, 1 - (strain / breakThreshold));
+                        if (loadLevel > 75) {
+                            ctx.strokeStyle = `rgba(231, 76, 60, ${alpha})`; // แดงเตือนเมื่อโครงสร้างวิบัติ
+                        } else {
+                            ctx.strokeStyle = `rgba(149, 165, 166, ${alpha * 0.35})`;
+                        }
+                        ctx.lineWidth = 0.7;
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            // เรนเดอร์ตัวอนุภาค
+            nodesArray.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        renderLoop();
+    </script>
+</body>
+</html>
